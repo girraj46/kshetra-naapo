@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>क्षेत्रफल नापो — Walk & Measure</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root{
+    --paper: #EFE8D8;
+    --paper-line: #d9cfb6;
+    --ink: #1F2E3D;
+    --ink-soft: #4b5a68;
+    --field: #3D6B4C;
+    --field-fill: rgba(61,107,76,0.18);
+    --gold: #C08829;
+    --soil: #6B4226;
+    --alert: #B33A3A;
+    --card-bg: #ffffff;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: 22px 22px;
+    font-family:'Inter', sans-serif;
+    color: var(--ink);
+    min-height:100vh;
+    padding: 18px 14px 40px;
+  }
+
+  .wrap{max-width:520px; margin:0 auto;}
+
+  header{margin-bottom:16px;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color: var(--soil);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--soil);display:inline-block;}
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:28px;
+    margin: 6px 0 2px;
+    line-height:1.15;
+  }
+  .sub{color:var(--ink-soft); font-size:14px; margin:0;}
+
+  .canvas-card{
+    background: var(--card-bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 18px 0 14px;
+    position:relative;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .canvas-label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; color:var(--ink-soft); margin-bottom:6px; letter-spacing:0.5px;
+  }
+  canvas{width:100%; height:auto; display:block; border-radius:2px; background:#fbf9f3;}
+
+  .status-row{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    margin-top:8px;
+    color:var(--ink-soft);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:#9aa5ab; flex-shrink:0;}
+  .dot.live{background:var(--field); box-shadow:0 0 0 3px var(--field-fill); animation:pulse 1.4s infinite;}
+  .dot.err{background:var(--alert);}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,107,76,0.4);}70%{box-shadow:0 0 0 8px rgba(61,107,76,0);}100%{box-shadow:0 0 0 0 rgba(61,107,76,0);}}
+
+  .stats{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat{
+    background:var(--card-bg);
+    border:1.5px solid var(--ink);
+    border-radius:4px;
+    padding:12px 12px 10px;
+  }
+  .stat .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .stat .value{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:22px; font-weight:700; color:var(--field); margin-top:3px;
+    word-break:break-word;
+  }
+  .stat.wide{grid-column: 1 / -1;}
+
+  .unit-table{
+    background:var(--card-bg);
+    border:1.5px solid var(--ink);
+    border-radius:4px;
+    padding:12px 14px;
+    margin: 4px 0 16px;
+  }
+  .unit-table .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
+  }
+  .unit-row{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    padding:5px 0;
+    border-top:1px dashed var(--paper-line);
+  }
+  .unit-row:first-of-type{border-top:none;}
+  .unit-row .u{color:var(--ink-soft);}
+  .unit-row .v{color:var(--ink); font-weight:600;}
+  .note{font-size:11px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+
+  .controls{display:flex; gap:10px; margin: 16px 0 6px;}
+  button{
+    flex:1;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    padding:14px 10px;
+    border-radius:4px;
+    border:1.5px solid var(--ink);
+    cursor:pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.08s ease;
+  }
+  button:active{transform: translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
+  button:disabled{opacity:0.4; cursor:not-allowed; box-shadow:none;}
+
+  #startBtn{background:var(--field); color:#fff;}
+  #stopBtn{background:var(--gold); color:var(--ink);}
+  #resetBtn{background:var(--card-bg); color:var(--ink); flex:0 0 auto; padding:14px 16px;}
+
+  .accuracy-note{
+    font-size:12px; color:var(--ink-soft); text-align:center; margin-top:10px; line-height:1.5;
+  }
+  .accuracy-note b{color:var(--ink);}
+
+  .banner{
+    background:#fff4e0; border:1.5px solid var(--gold); border-radius:4px;
+    padding:10px 12px; font-size:12.5px; color:var(--ink); margin-bottom:14px; line-height:1.5;
+  }
+
+  footer{margin-top:20px; text-align:center; font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Field Survey Tool</div>
+    <h1>क्षेत्रफल नापो</h1>
+    <p class="sub">Start point पर खड़े हों → सीमा पर चलें → वापस start पर आएं। GPS से क्षेत्रफल अपने आप निकलेगा।</p>
+  </header>
+
+  <div class="banner" id="permBanner">
+    📍 शुरू करने के लिए <b>"Start Walk"</b> दबाएं और लोकेशन की परमिशन दें। सबसे अच्छा नतीजा खुले मैदान में मिलता है, इनडोर नहीं।
+  </div>
+
+  <div class="canvas-card">
+    <div class="canvas-label">
+      <span>SURVEY PLOT</span>
+      <span id="scaleLabel">scale: —</span>
+    </div>
+    <canvas id="plot" width="480" height="380"></canvas>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">तैयार — GPS शुरू नहीं हुआ</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">दूरी तय की</div>
+      <div class="value" id="distVal">0 मी</div>
+    </div>
+    <div class="stat">
+      <div class="label">दर्ज पॉइंट्स</div>
+      <div class="value" id="pointVal">0</div>
+    </div>
+    <div class="stat wide">
+      <div class="label">क्षेत्रफल (Area)</div>
+      <div class="value" id="areaVal">— वर्ग मीटर</div>
+    </div>
+  </div>
+
+  <div class="unit-table" id="unitTable" style="display:none;">
+    <div class="label">इकाइयों में क्षेत्रफल</div>
+    <div class="unit-row"><span class="u">वर्ग मीटर (sq. m)</span><span class="v" id="uSqm">—</span></div>
+    <div class="unit-row"><span class="u">वर्ग फुट (sq. ft)</span><span class="v" id="uSqft">—</span></div>
+    <div class="unit-row"><span class="u">एकड़ (Acre)</span><span class="v" id="uAcre">—</span></div>
+    <div class="unit-row"><span class="u">हेक्टेयर (Hectare)</span><span class="v" id="uHectare">—</span></div>
+    <div class="unit-row"><span class="u">बीघा (Bigha, अनुमानित)</span><span class="v" id="uBigha">—</span></div>
+    <div class="note">बीघा की गणना UP/बिहार के सामान्य मानक (1 बीघा ≈ 2529 वर्ग मीटर) पर आधारित है। यह राज्य के अनुसार अलग हो सकता है — अपने इलाके में स्थानीय मानक से मिला लें।</div>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn">▶ Start Walk</button>
+    <button id="stopBtn" disabled>■ बंद करें व नापें</button>
+    <button id="resetBtn">↺</button>
+  </div>
+
+  <div class="accuracy-note" id="accNote"></div>
+
+  <footer>GPS शुद्धता मौसम, खुले आसमान व फ़ोन पर निर्भर करती है · दीवार/छत के अंदर काम नहीं करेगा</footer>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('plot');
+  const ctx = canvas.getContext('2d');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const distVal = document.getElementById('distVal');
+  const pointVal = document.getElementById('pointVal');
+  const areaVal = document.getElementById('areaVal');
+  const unitTable = document.getElementById('unitTable');
+  const scaleLabel = document.getElementById('scaleLabel');
+  const accNote = document.getElementById('accNote');
+  const permBanner = document.getElementById('permBanner');
+
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let watchId = null;
+  let origin = null;       // {lat, lon}
+  let points = [];         // projected {x,y} meters, in walk order
+  let rawCount = 0;
+  let totalDist = 0;
+  let lastRaw = null;      // last accepted lat/lon
+  let closed = false;
+
+  const MIN_STEP_M = 3;        // ignore GPS jitter smaller than this
+  const MAX_ACCURACY_M = 25;   // ignore very poor fixes
+
+  function toXY(lat, lon){
+    const latRad = origin.lat * Math.PI/180;
+    const x = (lon - origin.lon) * Math.cos(latRad) * 111320;
+    const y = (lat - origin.lat) * 110540;
+    return {x, y};
+  }
+
+  function haversine(lat1, lon1, lat2, lon2){
+    const R = 6371000;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
+  }
+
+  function shoelaceArea(pts){
+    if(pts.length < 3) return 0;
+    let sum = 0;
+    for(let i=0;i<pts.length;i++){
+      const p1 = pts[i];
+      const p2 = pts[(i+1)%pts.length];
+      sum += (p1.x*p2.y - p2.x*p1.y);
+    }
+    return Math.abs(sum/2);
+  }
+
+  function fmt(n, d=0){
+    return n.toLocaleString('en-IN', {maximumFractionDigits:d, minimumFractionDigits:d});
+  }
+
+  function draw(){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    // fine grid
+    ctx.strokeStyle = '#e9e3d3';
+    ctx.lineWidth = 1;
+    for(let gx=0; gx<w; gx+=20){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,h); ctx.stroke(); }
+    for(let gy=0; gy<h; gy+=20){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke(); }
+
+    if(points.length === 0){
+      ctx.fillStyle = '#a89f89';
+      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('Start Walk दबाने पर यहाँ लाइव प्लॉट दिखेगा', w/2, h/2);
+      scaleLabel.textContent = 'scale: —';
+      return;
+    }
+
+    // fit bounds with padding
+    const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
+    let minX = Math.min(...xs, 0), maxX = Math.max(...xs, 0);
+    let minY = Math.min(...ys, 0), maxY = Math.max(...ys, 0);
+    const spanX = Math.max(maxX-minX, 5);
+    const spanY = Math.max(maxY-minY, 5);
+    const pad = 40;
+    const scale = Math.min((w-2*pad)/spanX, (h-2*pad)/spanY);
+    const offX = pad - minX*scale + (w-2*pad - spanX*scale)/2;
+    const offY = h - pad + minY*scale - (h-2*pad - spanY*scale)/2;
+
+    function toCanvas(p){
+      return { cx: p.x*scale + offX, cy: offY - p.y*scale };
+    }
+
+    scaleLabel.textContent = 'scale: ' + (1/scale).toFixed(1) + ' m/px';
+
+    // path
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      const c = toCanvas(p);
+      if(i===0) ctx.moveTo(c.cx, c.cy); else ctx.lineTo(c.cx, c.cy);
+    });
+    if(closed){
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(61,107,76,0.18)';
+      ctx.fill();
+      ctx.strokeStyle = '#3D6B4C';
+    } else {
+      ctx.strokeStyle = '#C08829';
+      ctx.setLineDash([6,4]);
+    }
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // points
+    points.forEach((p,i)=>{
+      const c = toCanvas(p);
+      ctx.beginPath();
+      ctx.arc(c.cx, c.cy, i===0 ? 5 : 3, 0, Math.PI*2);
+      ctx.fillStyle = i===0 ? '#1F2E3D' : '#6B4226';
+      ctx.fill();
+    });
+
+    // live position pulse (last point, if not closed)
+    if(!closed && points.length){
+      const c = toCanvas(points[points.length-1]);
+      ctx.beginPath();
+      ctx.arc(c.cx, c.cy, 8, 0, Math.PI*2);
+      ctx.strokeStyle = '#3D6B4C';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  function updateStats(){
+    pointVal.textContent = points.length;
+    distVal.textContent = fmt(totalDist) + ' मी';
+
+    if(points.length >= 3){
+      const areaM2 = shoelaceArea(points);
+      areaVal.textContent = fmt(areaM2) + ' वर्ग मीटर';
+      unitTable.style.display = 'block';
+      document.getElementById('uSqm').textContent = fmt(areaM2) + ' m²';
+      document.getElementById('uSqft').textContent = fmt(areaM2*10.7639) + ' ft²';
+      document.getElementById('uAcre').textContent = fmt(areaM2/4046.86, 3) + ' acre';
+      document.getElementById('uHectare').textContent = fmt(areaM2/10000, 3) + ' ha';
+      document.getElementById('uBigha').textContent = fmt(areaM2/2529.285, 2) + ' बीघा';
+    } else {
+      areaVal.textContent = 'कम से कम 3 पॉइंट चाहिए';
+    }
+    draw();
+  }
+
+  function handlePosition(pos){
+    permBanner.style.display = 'none';
+    const { latitude, longitude, accuracy } = pos.coords;
+    accNote.innerHTML = 'GPS शुद्धता: <b>±' + Math.round(accuracy) + ' मी</b>';
+
+    if(accuracy > MAX_ACCURACY_M){
+      statusDot.className = 'dot err';
+      statusText.textContent = 'सिग्नल कमज़ोर (±' + Math.round(accuracy) + ' मी) — खुले में जाएं';
+      return;
+    }
+    statusDot.className = 'dot live';
+    statusText.textContent = 'लाइव ट्रैकिंग जारी है';
+
+    if(!origin){
+      origin = { lat: latitude, lon: longitude };
+      points.push({x:0, y:0});
+      lastRaw = { lat: latitude, lon: longitude };
+      rawCount = 1;
+      updateStats();
+      return;
+    }
+
+    const stepDist = haversine(lastRaw.lat, lastRaw.lon, latitude, longitude);
+    if(stepDist < MIN_STEP_M) return; // ignore jitter
+
+    totalDist += stepDist;
+    const xy = toXY(latitude, longitude);
+    points.push(xy);
+    lastRaw = { lat: latitude, lon: longitude };
+    updateStats();
+  }
+
+  function handleError(err){
+    statusDot.className = 'dot err';
+    statusText.textContent = 'GPS एरर: ' + err.message;
+    permBanner.style.display = 'block';
+    permBanner.textContent = '⚠️ लोकेशन एक्सेस नहीं मिला। ब्राउज़र सेटिंग्स में लोकेशन परमिशन ऑन करें और HTTPS पेज पर खोलें।';
+  }
+
+  startBtn.addEventListener('click', ()=>{
+    if(!navigator.geolocation){
+      statusText.textContent = 'यह डिवाइस/ब्राउज़र GPS सपोर्ट नहीं करता';
+      return;
+    }
+    closed = false;
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    statusText.textContent = 'GPS खोजा जा रहा है...';
+    watchId = navigator.geolocation.watchPosition(handlePosition, handleError, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 15000
+    });
+  });
+
+  stopBtn.addEventListener('click', ()=>{
+    if(watchId !== null){
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+    closed = true;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    statusDot.className = 'dot';
+    statusText.textContent = 'बंद — पॉलीगन क्लोज़ हो गया';
+    updateStats();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+    origin = null; points = []; totalDist = 0; closed = false; lastRaw = null;
+    startBtn.disabled = false; stopBtn.disabled = true;
+    statusDot.className = 'dot'; statusText.textContent = 'तैयार — GPS शुरू नहीं हुआ';
+    areaVal.textContent = '— वर्ग मीटर';
+    unitTable.style.display = 'none';
+    accNote.textContent = '';
+    permBanner.style.display = 'block';
+    permBanner.textContent = '📍 शुरू करने के लिए "Start Walk" दबाएं और लोकेशन की परमिशन दें। सबसे अच्छा नतीजा खुले मैदान में मिलता है, इनडोर नहीं।';
+    updateStats();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
