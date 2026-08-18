@@ -1,0 +1,1130 @@
+/* ==========================================================================
+   क्षेत्रफल नापो — Professional GIS Land Survey Design System
+   ========================================================================== */
+
+:root {
+  /* Color Palette - Land Survey & Topographic Green Theme (Light) */
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-panel: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  
+  --primary: #15803d;
+  --primary-hover: #166534;
+  --primary-light: #dcfce7;
+  --primary-glow: rgba(21, 128, 61, 0.25);
+  
+  --accent: #b45309;
+  --accent-light: #fef3c7;
+  --alert: #dc2626;
+  --alert-light: #fee2e2;
+  --info: #0284c7;
+  --info-light: #e0f2fe;
+  
+  --map-polygon-stroke: #16a34a;
+  --map-polygon-fill: rgba(22, 163, 74, 0.25);
+  --map-point-fill: #ffffff;
+  --map-point-stroke: #15803d;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-hindi: 'Tiro Devanagari Hindi', var(--font-main);
+  
+  --header-height: 56px;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #090d16;
+  --bg-surface: #111827;
+  --bg-surface-elevated: #1f2937;
+  --bg-panel: #161f30;
+  --border-color: #283548;
+  --border-strong: #374151;
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  
+  --primary: #22c55e;
+  --primary-hover: #4ade80;
+  --primary-light: rgba(34, 197, 94, 0.15);
+  --primary-glow: rgba(34, 197, 94, 0.35);
+  
+  --accent: #f59e0b;
+  --accent-light: rgba(245, 158, 11, 0.15);
+  --alert: #ef4444;
+  --alert-light: rgba(239, 68, 68, 0.15);
+  --info: #38bdf8;
+  --info-light: rgba(56, 189, 248, 0.15);
+  
+  --map-polygon-stroke: #4ade80;
+  --map-polygon-fill: rgba(74, 222, 128, 0.28);
+  --map-point-fill: #090d16;
+  --map-point-stroke: #4ade80;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+/* Reset & Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-main);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Main App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Header / Navbar */
+.app-header {
+  height: var(--header-height);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.brand-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Project Badge Selector */
+.project-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-selector-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Map Area & Overlay Layout */
+.map-workspace {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: calc(100% - var(--header-height));
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: #1e293b;
+}
+
+/* Floating Map Controls */
+.map-controls-left {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-controls-right {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctrl-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--primary);
+}
+
+.ctrl-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.ctrl-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ctrl-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--alert);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-surface);
+}
+
+/* Layer Switcher Dropdown */
+.layer-menu {
+  position: absolute;
+  top: 0;
+  right: 50px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: var(--shadow-xl);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  z-index: 500;
+}
+
+.layer-menu.open {
+  display: flex;
+}
+
+.layer-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.layer-opt:hover {
+  background: var(--bg-panel);
+}
+
+.layer-opt.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Map Search Bar */
+.map-search-container {
+  position: absolute;
+  top: 14px;
+  left: 64px;
+  right: 64px;
+  max-width: 400px;
+  margin: 0 auto;
+  z-index: 400;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 0 12px;
+  box-shadow: var(--shadow-lg);
+  height: 40px;
+  width: 100%;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-main);
+  padding-left: 8px;
+  font-family: var(--font-main);
+}
+
+.search-box input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+  z-index: 500;
+}
+
+.search-result-item {
+  padding: 10px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.search-result-item:hover {
+  background: var(--bg-panel);
+}
+
+/* GPS Status Pill on Top */
+.gps-status-pill {
+  position: absolute;
+  bottom: calc(180px + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 400;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.pulse-dot.active {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4);
+  animation: pulse-ring 1.5s infinite;
+}
+
+.pulse-dot.warning {
+  background: #f59e0b;
+}
+
+.pulse-dot.error {
+  background: #ef4444;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Bottom Sheet / Panel */
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-xl);
+  z-index: 450;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 82vh;
+}
+
+.sheet-handle-bar {
+  width: 100%;
+  padding: 8px 0 4px;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+}
+
+/* Live Stats Summary Bar */
+.summary-bar {
+  padding: 4px 16px 10px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Primary Action Bar */
+.primary-actions-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+}
+
+.btn-primary {
+  flex: 1;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--primary-glow);
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: var(--alert-light);
+  color: var(--alert);
+  border: 1px solid var(--alert);
+}
+
+/* Collapsible Details Content */
+.sheet-scroll-content {
+  overflow-y: auto;
+  padding: 10px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Regional State Selector */
+.state-selector-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+}
+
+.state-selector-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.state-select {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  outline: none;
+}
+
+/* Indian Units Grid */
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.unit-chip {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-chip-name {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.unit-chip-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  margin-top: 2px;
+}
+
+.unit-chip.highlight {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.unit-chip.highlight .unit-chip-val {
+  color: var(--primary);
+}
+
+/* Survey Coordinates / Points List */
+.coords-accordion {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.accordion-header {
+  background: var(--bg-panel);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.coords-table-wrapper {
+  max-height: 140px;
+  overflow-y: auto;
+  display: none;
+  background: var(--bg-surface);
+}
+
+.coords-table-wrapper.open {
+  display: block;
+}
+
+.coords-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.coords-table th, .coords-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.coords-table th {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Modal System */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.open .modal-card {
+  transform: scale(1);
+}
+
+.modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg-panel);
+}
+
+/* Form Styles inside Modals */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form-input, .form-textarea, .form-select {
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 13px;
+  font-family: var(--font-main);
+  outline: none;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--primary);
+  background: var(--bg-surface);
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* History List Items */
+.history-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.history-item:hover {
+  border-color: var(--primary);
+  background: var(--bg-surface-elevated);
+}
+
+.history-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.history-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.history-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.history-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: var(--radius-sm);
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.toast.success { border-left: 3px solid #22c55e; }
+.toast.error { border-left: 3px solid #ef4444; }
+.toast.info { border-left: 3px solid #38bdf8; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hidden container for print / PDF canvas snapshot */
+#pdf-render-template {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 800px;
+  background: white;
+  color: #111827;
+  padding: 30px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Leaflet Custom Styles */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-surface);
+}
+
+/* Custom Marker Vertex */
+.custom-vertex-marker {
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border: 3px solid #16a34a;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  transition: transform 0.1s ease;
+}
+
+.custom-vertex-marker:active {
+  cursor: grabbing;
+  transform: scale(1.3);
+}
+
+.custom-vertex-first {
+  border-color: #dc2626;
+}
+
+/* Landowner Cadastral Marker */
+.custom-owner-pin {
+  width: 28px;
+  height: 28px;
+  background: #b45309;
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bounce-drop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-owner-pin span {
+  transform: rotate(45deg);
+  font-size: 13px;
+  color: white;
+}
+
+@keyframes bounce-drop {
+  0% { transform: translateY(-30px) rotate(-45deg); opacity: 0; }
+  100% { transform: translateY(0) rotate(-45deg); opacity: 1; }
+}
+
+/* Landowner Dossier & Khatauni Card Styling */
+.khatauni-card {
+  border: 2px solid #1e293b;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.khatauni-header-banner {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  color: white;
+  padding: 12px 16px;
+  text-align: center;
+  position: relative;
+}
+
+.khatauni-emblem {
+  font-size: 24px;
+  margin-bottom: 2px;
+}
+
+.khatauni-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.khatauni-sub {
+  font-size: 11px;
+  opacity: 0.9;
+  font-family: var(--font-mono);
+}
+
+.khatauni-section {
+  padding: 12px 14px;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.khatauni-section:last-child {
+  border-bottom: none;
+}
+
+.khatauni-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  padding: 3px 0;
+}
+
+.khatauni-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.khatauni-val {
+  color: var(--text-main);
+  font-weight: 700;
+  text-align: right;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-clean {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-mortgage {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge-land-type {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .app-container {
+    flex-direction: row;
+  }
+  
+  .app-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .map-workspace {
+    margin-top: var(--header-height);
+    height: calc(100% - var(--header-height));
+  }
+  
+  .bottom-sheet {
+    position: absolute;
+    top: var(--header-height);
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 380px;
+    height: calc(100% - var(--header-height));
+    max-height: none;
+    border-top: none;
+    border-left: 1px solid var(--border-color);
+    border-radius: 0;
+  }
+  
+  .gps-status-pill {
+    bottom: 20px;
+    left: 20px;
+    transform: none;
+  }
+}
+

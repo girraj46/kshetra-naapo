@@ -1,466 +1,573 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="hi" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>क्षेत्रफल नापो — Walk & Measure</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>क्षेत्रफल नापो — डिजिटल भू-अभिलेख एवं सर्वेक्षण प्रणाली</title>
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#15803d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="क्षेत्रफल नापो" />
+  <meta name="description" content="सटीक जीपीएस एवं डिजिटल सैटेलाइट मानचित्र आधारित भूमि क्षेत्रफल मापन प्रणाली (बीघा, बिस्वा, एकड़, हेक्टेयर, गुंठा, कनाल, मरला)" />
 
-  :root{
-    --paper: #EFE8D8;
-    --paper-line: #d9cfb6;
-    --ink: #1F2E3D;
-    --ink-soft: #4b5a68;
-    --field: #3D6B4C;
-    --field-fill: rgba(61,107,76,0.18);
-    --gold: #C08829;
-    --soil: #6B4226;
-    --alert: #B33A3A;
-    --card-bg: #ffffff;
-  }
+  <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet" />
 
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background: var(--paper);
-    background-image:
-      linear-gradient(var(--paper-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
-    background-size: 22px 22px;
-    font-family:'Inter', sans-serif;
-    color: var(--ink);
-    min-height:100vh;
-    padding: 18px 14px 40px;
-  }
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  .wrap{max-width:520px; margin:0 auto;}
-
-  header{margin-bottom:16px;}
-  .eyebrow{
-    font-family:'JetBrains Mono', monospace;
-    font-size:11px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    color: var(--soil);
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .eyebrow::before{content:"";width:18px;height:1px;background:var(--soil);display:inline-block;}
-  h1{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:28px;
-    margin: 6px 0 2px;
-    line-height:1.15;
-  }
-  .sub{color:var(--ink-soft); font-size:14px; margin:0;}
-
-  .canvas-card{
-    background: var(--card-bg);
-    border: 1.5px solid var(--ink);
-    border-radius: 4px;
-    padding: 10px;
-    margin: 18px 0 14px;
-    position:relative;
-    box-shadow: 3px 3px 0 var(--ink);
-  }
-  .canvas-label{
-    display:flex; justify-content:space-between; align-items:baseline;
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px; color:var(--ink-soft); margin-bottom:6px; letter-spacing:0.5px;
-  }
-  canvas{width:100%; height:auto; display:block; border-radius:2px; background:#fbf9f3;}
-
-  .status-row{
-    display:flex; align-items:center; gap:8px;
-    font-family:'JetBrains Mono', monospace;
-    font-size:11px;
-    margin-top:8px;
-    color:var(--ink-soft);
-  }
-  .dot{width:8px;height:8px;border-radius:50%;background:#9aa5ab; flex-shrink:0;}
-  .dot.live{background:var(--field); box-shadow:0 0 0 3px var(--field-fill); animation:pulse 1.4s infinite;}
-  .dot.err{background:var(--alert);}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,107,76,0.4);}70%{box-shadow:0 0 0 8px rgba(61,107,76,0);}100%{box-shadow:0 0 0 0 rgba(61,107,76,0);}}
-
-  .stats{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 14px 0;
-  }
-  .stat{
-    background:var(--card-bg);
-    border:1.5px solid var(--ink);
-    border-radius:4px;
-    padding:12px 12px 10px;
-  }
-  .stat .label{
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft);
-  }
-  .stat .value{
-    font-family:'Space Grotesk', sans-serif;
-    font-size:22px; font-weight:700; color:var(--field); margin-top:3px;
-    word-break:break-word;
-  }
-  .stat.wide{grid-column: 1 / -1;}
-
-  .unit-table{
-    background:var(--card-bg);
-    border:1.5px solid var(--ink);
-    border-radius:4px;
-    padding:12px 14px;
-    margin: 4px 0 16px;
-  }
-  .unit-table .label{
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
-  }
-  .unit-row{
-    display:flex; justify-content:space-between;
-    font-family:'JetBrains Mono', monospace;
-    font-size:13px;
-    padding:5px 0;
-    border-top:1px dashed var(--paper-line);
-  }
-  .unit-row:first-of-type{border-top:none;}
-  .unit-row .u{color:var(--ink-soft);}
-  .unit-row .v{color:var(--ink); font-weight:600;}
-  .note{font-size:11px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
-
-  .controls{display:flex; gap:10px; margin: 16px 0 6px;}
-  button{
-    flex:1;
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:15px;
-    padding:14px 10px;
-    border-radius:4px;
-    border:1.5px solid var(--ink);
-    cursor:pointer;
-    box-shadow: 3px 3px 0 var(--ink);
-    transition: transform 0.08s ease;
-  }
-  button:active{transform: translate(2px,2px); box-shadow:1px 1px 0 var(--ink);}
-  button:disabled{opacity:0.4; cursor:not-allowed; box-shadow:none;}
-
-  #startBtn{background:var(--field); color:#fff;}
-  #stopBtn{background:var(--gold); color:var(--ink);}
-  #resetBtn{background:var(--card-bg); color:var(--ink); flex:0 0 auto; padding:14px 16px;}
-
-  .accuracy-note{
-    font-size:12px; color:var(--ink-soft); text-align:center; margin-top:10px; line-height:1.5;
-  }
-  .accuracy-note b{color:var(--ink);}
-
-  .banner{
-    background:#fff4e0; border:1.5px solid var(--gold); border-radius:4px;
-    padding:10px 12px; font-size:12.5px; color:var(--ink); margin-bottom:14px; line-height:1.5;
-  }
-
-  footer{margin-top:20px; text-align:center; font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono', monospace;}
-</style>
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
-<div class="wrap">
+  <div class="app-container">
+    <!-- Top Header / Navigation Bar -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="app-logo">📐</div>
+        <div class="brand-info">
+          <span class="brand-title" data-i18n="appName">क्षेत्रफल नापो</span>
+          <span class="brand-badge" data-i18n="tagline">डिजिटल भू-अभिलेख प्रणाली</span>
+        </div>
+      </div>
 
-  <header>
-    <div class="eyebrow">Field Survey Tool</div>
-    <h1>क्षेत्रफल नापो</h1>
-    <p class="sub">Start point पर खड़े हों → सीमा पर चलें → वापस start पर आएं। GPS से क्षेत्रफल अपने आप निकलेगा।</p>
-  </header>
+      <div class="header-actions">
+        <!-- Project Selector -->
+        <button class="project-selector-btn" id="btnProjectOpen" title="Select Project / Client">
+          <span>📁</span>
+          <span id="currentProjectName">Default Project</span>
+        </button>
 
-  <div class="banner" id="permBanner">
-    📍 शुरू करने के लिए <b>"Start Walk"</b> दबाएं और लोकेशन की परमिशन दें। सबसे अच्छा नतीजा खुले मैदान में मिलता है, इनडोर नहीं।
+        <!-- History Button -->
+        <button class="btn-icon" id="btnHistoryOpen" title="Measurement History">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </button>
+
+        <!-- Cloud / Backup -->
+        <button class="btn-icon" id="btnBackupOpen" title="Backup & Cloud Sync">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+          </svg>
+        </button>
+
+        <!-- Language Toggle -->
+        <button class="btn-icon" id="btnLangToggle" title="Switch Language (हिन्दी / English)" style="font-weight:700; font-size:11px;">
+          EN
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="btn-icon" id="btnThemeToggle" title="Toggle Light/Dark Theme">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Map Workspace -->
+    <main class="map-workspace">
+      <!-- Search Bar -->
+      <div class="map-search-container">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="locationSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="स्थान, गांव, शहर या Lat, Lng खोजें..." autocomplete="off" />
+        </div>
+        <div class="search-results-dropdown" id="searchResultsDropdown"></div>
+      </div>
+
+      <!-- Floating Left Toolbar -->
+      <div class="map-controls-left">
+        <!-- GPS Walk Tracker -->
+        <button class="ctrl-btn" id="btnGPSWalk" title="Start/Stop GPS Live Walk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+        </button>
+
+        <!-- Manual Draw Mode -->
+        <button class="ctrl-btn" id="btnManualDraw" title="Manual Draw / Tap Map to Add Point">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+            <path d="M2 2l7.586 7.586"></path>
+            <circle cx="11" cy="11" r="2"></circle>
+          </svg>
+        </button>
+
+        <!-- Landowner & Cadastral Inspector Tool -->
+        <button class="ctrl-btn" id="btnOwnerInspect" title="भू-स्वामी व खतौनी विवरण देखें (Click point to view Landowner details)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+
+        <!-- Undo Point -->
+        <button class="ctrl-btn" id="btnUndo" title="Undo Last Point" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+
+        <!-- Redo Point -->
+        <button class="ctrl-btn" id="btnRedo" title="Redo Point" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+
+        <!-- Clear Map -->
+        <button class="ctrl-btn" id="btnClearMap" title="Clear All Points">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Floating Right Toolbar -->
+      <div class="map-controls-right">
+        <!-- Layer Switcher Button -->
+        <button class="ctrl-btn" id="btnLayerToggle" title="Map Layers (Satellite, Street, Topo)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </button>
+
+        <!-- Layer Dropdown Menu -->
+        <div class="layer-menu" id="layerMenu">
+          <button class="layer-opt active" data-layer="satellite">🛰️ Satellite (उपग्रह)</button>
+          <button class="layer-opt" data-layer="street">🗺️ Street (मानचित्र)</button>
+          <button class="layer-opt" data-layer="topo">⛰️ Topo (भौगोलिक)</button>
+        </div>
+
+        <!-- Recenter / Locate Button -->
+        <button class="ctrl-btn" id="btnRecenter" title="Fit Polygon or Center on My Location">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="12" x2="2" y2="12"></line>
+            <line x1="12" y1="6" x2="12" y2="2"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Live GPS Status Floating Pill -->
+      <div class="gps-status-pill" id="gpsStatusPill">
+        <span class="pulse-dot" id="gpsPulseDot"></span>
+        <span id="gpsStatusText" data-i18n="noSignal">GPS बंद</span>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Bottom Sheet / Metrics & Actions Panel -->
+      <section class="bottom-sheet" id="bottomSheet">
+        <div class="sheet-handle-bar">
+          <div class="sheet-handle"></div>
+        </div>
+
+        <!-- Summary Stats Bar -->
+        <div class="summary-bar">
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="area">क्षेत्रफल (Area)</span>
+            <span class="stat-value" id="mainAreaVal">—</span>
+            <span class="stat-sub" id="mainAreaUnit">Min 3 points</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="perimeter">परिमाप</span>
+            <span class="stat-value" id="mainPerimeterVal">0 m</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="points">पॉइंट्स</span>
+            <span class="stat-value" id="pointsCountVal">0</span>
+          </div>
+        </div>
+
+        <!-- Primary Action Buttons Bar -->
+        <div class="primary-actions-bar">
+          <button class="btn-primary" id="btnSaveOpen">
+            <span>💾</span>
+            <span data-i18n="save">सुरक्षित करें</span>
+          </button>
+          <button class="btn-secondary" id="btnPDFExport" title="Generate Professional PDF Certificate">
+            <span>📄</span>
+            <span data-i18n="pdfReport">PDF</span>
+          </button>
+          <button class="btn-secondary" id="btnImageExport" title="Download Map PNG Image">
+            <span>📸</span>
+            <span data-i18n="exportImg">इमेज</span>
+          </button>
+          <button class="btn-secondary" id="btnShareWhatsApp" title="Share Summary to WhatsApp">
+            <span>📤</span>
+            <span data-i18n="share">शेयर</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Units & Details Content -->
+        <div class="sheet-scroll-content">
+          <!-- State / Region Preset Selector -->
+          <div class="state-selector-wrapper">
+            <span class="state-selector-label" data-i18n="statePreset">राज्य / मानक:</span>
+            <select id="statePresetSelect" class="state-select"></select>
+          </div>
+
+          <!-- Indian Land Measurement Units Grid -->
+          <div class="units-grid" id="unitsGrid"></div>
+
+          <!-- Coordinates Accordion -->
+          <div class="coords-accordion">
+            <div class="accordion-header" id="coordsAccordionHeader">
+              <span>📍 <span data-i18n="points">पॉइंट्स</span> एवं निर्देशांक (GPS Coordinates)</span>
+              <span id="coordsArrow">▼</span>
+            </div>
+            <div class="coords-table-wrapper" id="coordsTableWrapper">
+              <table class="coords-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>दूरी (Side)</th>
+                  </tr>
+                </thead>
+                <tbody id="coordsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div class="canvas-card">
-    <div class="canvas-label">
-      <span>SURVEY PLOT</span>
-      <span id="scaleLabel">scale: —</span>
-    </div>
-    <canvas id="plot" width="480" height="380"></canvas>
-    <div class="status-row">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">तैयार — GPS शुरू नहीं हुआ</span>
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- MODAL 1: Save Survey Record -->
+  <div class="modal-backdrop" id="saveModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="saveModalTitle">सर्वेक्षण सुरक्षित करें</h3>
+        <button class="btn-icon" data-close-modal="saveModal">✕</button>
+      </div>
+      <form id="saveSurveyForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" data-i18n="surveyName">सर्वेक्षण का नाम *</label>
+            <input type="text" class="form-input" id="inpSurveyTitle" required placeholder="उदा. रामकिशन की कृषि भूमि" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">प्रोजेक्ट / फोल्डर</label>
+            <select class="form-select" id="saveSurveyProjectSelect"></select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" data-i18n="khasraNo">खसरा / गाटा संख्या</label>
+              <input type="text" class="form-input" id="inpKhasraNo" placeholder="उदा. 423/1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="khataNo">खाता संख्या</label>
+              <input type="text" class="form-input" id="inpKhataNo" placeholder="उदा. 88" />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" data-i18n="ownerName">भू-स्वामी का नाम</label>
+              <input type="text" class="form-input" id="inpOwnerName" placeholder="उदा. रामकिशन यादव" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="surveyorName">सर्वेक्षक / पटवारी नाम</label>
+              <input type="text" class="form-input" id="inpSurveyorName" placeholder="उदा. आर. के. शर्मा" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="village">ग्राम / तहसील / जिला</label>
+            <input type="text" class="form-input" id="inpVillage" placeholder="उदा. मौजा रामपुर, तहसील सदर" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="notes">विवरण / टिप्पणी</label>
+            <textarea class="form-textarea" id="inpNotes" rows="2" placeholder="सीमा पत्थर, रास्ते या पेड़ आदि के निशान..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="saveModal" data-i18n="cancel">रद्द करें</button>
+          <button type="submit" class="btn-primary" data-i18n="confirmSave">सुरक्षित करें</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat">
-      <div class="label">दूरी तय की</div>
-      <div class="value" id="distVal">0 मी</div>
-    </div>
-    <div class="stat">
-      <div class="label">दर्ज पॉइंट्स</div>
-      <div class="value" id="pointVal">0</div>
-    </div>
-    <div class="stat wide">
-      <div class="label">क्षेत्रफल (Area)</div>
-      <div class="value" id="areaVal">— वर्ग मीटर</div>
+  <!-- MODAL 2: History & Saved Surveys -->
+  <div class="modal-backdrop" id="historyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="historyModalTitle">सर्वेक्षण इतिहास एवं रिकॉर्ड्स</h3>
+        <button class="btn-icon" data-close-modal="historyModal">✕</button>
+      </div>
+      <div class="modal-body" id="historyListContainer"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="historyModal" data-i18n="cancel">बंद करें</button>
+      </div>
     </div>
   </div>
 
-  <div class="unit-table" id="unitTable" style="display:none;">
-    <div class="label">इकाइयों में क्षेत्रफल</div>
-    <div class="unit-row"><span class="u">वर्ग मीटर (sq. m)</span><span class="v" id="uSqm">—</span></div>
-    <div class="unit-row"><span class="u">वर्ग फुट (sq. ft)</span><span class="v" id="uSqft">—</span></div>
-    <div class="unit-row"><span class="u">एकड़ (Acre)</span><span class="v" id="uAcre">—</span></div>
-    <div class="unit-row"><span class="u">हेक्टेयर (Hectare)</span><span class="v" id="uHectare">—</span></div>
-    <div class="unit-row"><span class="u">बीघा (Bigha, अनुमानित)</span><span class="v" id="uBigha">—</span></div>
-    <div class="note">बीघा की गणना UP/बिहार के सामान्य मानक (1 बीघा ≈ 2529 वर्ग मीटर) पर आधारित है। यह राज्य के अनुसार अलग हो सकता है — अपने इलाके में स्थानीय मानक से मिला लें।</div>
+  <!-- MODAL 3: Projects & Folders Management -->
+  <div class="modal-backdrop" id="projectModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="projectModalTitle">प्रोजेक्ट एवं फोल्डर प्रबंधन</h3>
+        <button class="btn-icon" data-close-modal="projectModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="createProjectForm" style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" class="form-input" id="inpNewProjectName" required data-i18n-placeholder="newProjectName" placeholder="नए प्रोजेक्ट का नाम (उदा. रामपुर चकबंदी)" style="flex:1;" />
+          <button type="submit" class="btn-primary" data-i18n="createProject">बनाएं</button>
+        </form>
+        <p style="font-size:12px; color:var(--text-muted);">अपने सभी सर्वेक्षणों को प्रोजेक्ट या मौजा अनुसार व्यवस्थित करें।</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="projectModal" data-i18n="cancel">बंद करें</button>
+      </div>
+    </div>
   </div>
 
-  <div class="controls">
-    <button id="startBtn">▶ Start Walk</button>
-    <button id="stopBtn" disabled>■ बंद करें व नापें</button>
-    <button id="resetBtn">↺</button>
+  <!-- MODAL 4: Cloud Sync & Backup / Restore -->
+  <div class="modal-backdrop" id="backupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="backupTitle">डेटा बैकअप एवं रीस्टोर</h3>
+        <button class="btn-icon" data-close-modal="backupModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="background:var(--bg-panel); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">📥 ऑफ़लाइन / क्लाउड बैकअप डाउनलोड</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">अपने सभी प्रोजेक्ट्स, खसरा रिकॉर्ड्स और मापों को एक सुरक्षित JSON बैकअप फ़ाइल में डाउनलोड करें।</p>
+            <button class="btn-primary" id="btnExportBackup" data-i18n="exportBackup" style="width:100%;">
+              बैकअप फ़ाइल डाउनलोड करें (JSON)
+            </button>
+          </div>
+
+          <div style="background:var(--bg-panel); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">📤 बैकअप फ़ाइल रीस्टोर करें</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">पहले से सेव की गई JSON बैकअप फ़ाइल से अपने सभी पुराने सर्वे रिकॉर्ड्स को वापस लाएं।</p>
+            <input type="file" id="backupFileInput" accept=".json" style="display:none;" />
+            <button class="btn-secondary" onclick="document.getElementById('backupFileInput').click()" style="width:100%;">
+              फ़ाइल चुनें एवं रीस्टोर करें
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="backupModal" data-i18n="cancel">बंद करें</button>
+      </div>
+    </div>
   </div>
 
-  <div class="accuracy-note" id="accNote"></div>
+  <!-- MODAL 5: Landowner Dossier & Khatauni Details -->
+  <div class="modal-backdrop" id="ownerDetailsModal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header" style="background:#15803d; color:white;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🏛️</span>
+          <div>
+            <h3 class="modal-title" style="color:white; font-size:15px;" id="ownerModalTitle">भू-अभिलेख एवं खतौनी विवरण</h3>
+            <span style="font-size:10.5px; opacity:0.9; font-family:var(--font-mono);" id="ownerModalSubtitle">डिजिटल राजस्व अधिकार अभिलेख</span>
+          </div>
+        </div>
+        <button class="btn-icon" data-close-modal="ownerDetailsModal" style="background:rgba(255,255,255,0.2); color:white; border:none;">✕</button>
+      </div>
 
-  <footer>GPS शुद्धता मौसम, खुले आसमान व फ़ोन पर निर्भर करती है · दीवार/छत के अंदर काम नहीं करेगा</footer>
-</div>
+      <div class="modal-body" style="padding:14px;">
+        <div class="khatauni-card">
+          <!-- Administrative Location -->
+          <div class="khatauni-section" style="background:var(--bg-panel);">
+            <div class="khatauni-row">
+              <span class="khatauni-label">ग्राम / मौजा:</span>
+              <span class="khatauni-val" id="odVillage">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">तहसील व जनपद:</span>
+              <span class="khatauni-val" id="odTehsilDistrict">—</span>
+            </div>
+          </div>
 
-<script>
-(function(){
-  const canvas = document.getElementById('plot');
-  const ctx = canvas.getContext('2d');
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const distVal = document.getElementById('distVal');
-  const pointVal = document.getElementById('pointVal');
-  const areaVal = document.getElementById('areaVal');
-  const unitTable = document.getElementById('unitTable');
-  const scaleLabel = document.getElementById('scaleLabel');
-  const accNote = document.getElementById('accNote');
-  const permBanner = document.getElementById('permBanner');
+          <!-- Parcel & Owner Info -->
+          <div class="khatauni-section">
+            <div class="khatauni-row">
+              <span class="khatauni-label">खसरा / गाटा संख्या:</span>
+              <span class="khatauni-val" style="color:#15803d; font-size:14px;" id="odKhasra">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">खाता संख्या:</span>
+              <span class="khatauni-val" id="odKhata">—</span>
+            </div>
+            <div class="khatauni-row" style="margin-top:4px;">
+              <span class="khatauni-label">भू-स्वामी (खातेदार):</span>
+              <span class="khatauni-val" style="font-size:13.5px; color:#0f172a;" id="odOwnerName">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">पिता / पति का नाम:</span>
+              <span class="khatauni-val" id="odFatherName">—</span>
+            </div>
+          </div>
 
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const resetBtn = document.getElementById('resetBtn');
+          <!-- Land Area & Classification -->
+          <div class="khatauni-section">
+            <div class="khatauni-row">
+              <span class="khatauni-label">कुल क्षेत्रफल:</span>
+              <span class="khatauni-val" style="color:#b45309; font-size:14px;" id="odArea">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">इकाइयों में विस्तार:</span>
+              <span class="khatauni-val" style="font-size:11px; font-family:var(--font-mono);" id="odAreaUnits">—</span>
+            </div>
+            <div class="khatauni-row" style="margin-top:4px;">
+              <span class="khatauni-label">भूमि श्रेणी (Land Type):</span>
+              <span class="khatauni-val"><span class="badge-status badge-land-type" id="odLandType">संक्रामणीय भूमिधर (कृषि)</span></span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">हिस्सेदारी (Share):</span>
+              <span class="khatauni-val" id="odShare">1/1 (पूर्ण स्वामी)</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">बैंक बंधक / ऋण स्थिति:</span>
+              <span class="khatauni-val"><span class="badge-status badge-clean" id="odMortgage">ऋण मुक्त (Clean)</span></span>
+            </div>
+          </div>
 
-  let watchId = null;
-  let origin = null;       // {lat, lon}
-  let points = [];         // projected {x,y} meters, in walk order
-  let rawCount = 0;
-  let totalDist = 0;
-  let lastRaw = null;      // last accepted lat/lon
-  let closed = false;
+          <!-- GPS Coordinates -->
+          <div class="khatauni-section" style="background:var(--bg-panel); font-size:11px; font-family:var(--font-mono);">
+            <div class="khatauni-row">
+              <span class="khatauni-label">सटीक GPS निर्देशांक:</span>
+              <span class="khatauni-val" id="odCoordinates">—</span>
+            </div>
+          </div>
 
-  const MIN_STEP_M = 3;        // ignore GPS jitter smaller than this
-  const MAX_ACCURACY_M = 25;   // ignore very poor fixes
+          <!-- Official Government Bhulekh Portal Link Card -->
+          <div class="khatauni-section" style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:var(--radius-sm); margin:10px 0 4px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <span style="font-size:12px; font-weight:700; color:#166534;">🌐 आधिकारिक सरकारी भूलेख पोर्टल (Official Portal)</span>
+              <span id="odStateBadge" class="badge-status badge-clean" style="font-size:10px;">UP Bhulekh</span>
+            </div>
+            <p style="font-size:11.5px; color:#14532d; margin-bottom:8px; line-height:1.4;">
+              सरकारी राजस्व रिकॉर्ड से सत्यापित असली खतौनी देखने के लिए सीधे अपने राज्य के आधिकारिक पोर्टल पर जाएं:
+            </p>
+            <a id="odGovPortalLink" href="https://upbhulekh.gov.in/" target="_blank" class="btn-primary" style="text-decoration:none; padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; border-radius:4px;">
+              <span>🔗</span> <span id="odGovPortalBtnText">सरकारी भूलेख पोर्टल पर खतौनी देखें</span>
+            </a>
+          </div>
+        </div>
+      </div>
 
-  function toXY(lat, lon){
-    const latRad = origin.lat * Math.PI/180;
-    const x = (lon - origin.lon) * Math.cos(latRad) * 111320;
-    const y = (lat - origin.lat) * 110540;
-    return {x, y};
-  }
+      <div class="modal-footer" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px;">
+        <button type="button" class="btn-secondary btn-xs" id="btnEditOwnerDetails">✏️ विवरण बदलें (Edit)</button>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn-secondary btn-xs" id="btnShareOwnerWhatsApp">📤 शेयर</button>
+          <button type="button" class="btn-primary btn-xs" id="btnExportKhatauniPDF">📄 खतौनी नकल PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function haversine(lat1, lon1, lat2, lon2){
-    const R = 6371000;
-    const dLat = (lat2-lat1)*Math.PI/180;
-    const dLon = (lon2-lon1)*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return 2*R*Math.asin(Math.sqrt(a));
-  }
+  <!-- MODAL 6: Edit Landowner & Parcel Details -->
+  <div class="modal-backdrop" id="ownerEditModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">भू-स्वामी विवरण अपडेट करें</h3>
+        <button class="btn-icon" data-close-modal="ownerEditModal">✕</button>
+      </div>
+      <form id="editOwnerForm">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">खसरा / गाटा संख्या *</label>
+              <input type="text" class="form-input" id="editInpKhasra" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">खाता संख्या</label>
+              <input type="text" class="form-input" id="editInpKhata" />
+            </div>
+          </div>
 
-  function shoelaceArea(pts){
-    if(pts.length < 3) return 0;
-    let sum = 0;
-    for(let i=0;i<pts.length;i++){
-      const p1 = pts[i];
-      const p2 = pts[(i+1)%pts.length];
-      sum += (p1.x*p2.y - p2.x*p1.y);
-    }
-    return Math.abs(sum/2);
-  }
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">भू-स्वामी का नाम *</label>
+              <input type="text" class="form-input" id="editInpOwner" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">पिता / पति का नाम</label>
+              <input type="text" class="form-input" id="editInpFather" />
+            </div>
+          </div>
 
-  function fmt(n, d=0){
-    return n.toLocaleString('en-IN', {maximumFractionDigits:d, minimumFractionDigits:d});
-  }
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">कुल रकबा / क्षेत्रफल (वर्ग मीटर)</label>
+              <input type="number" step="any" class="form-input" id="editInpAreaSqm" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">हिस्सेदारी (Share)</label>
+              <input type="text" class="form-input" id="editInpShare" placeholder="उदा. 1/1 या 1/2" />
+            </div>
+          </div>
 
-  function draw(){
-    const w = canvas.width, h = canvas.height;
-    ctx.clearRect(0,0,w,h);
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">भूमि श्रेणी</label>
+              <select class="form-select" id="editInpLandType">
+                <option value="संक्रामणीय भूमिधर (कृषि)">संक्रामणीय भूमिधर (कृषि)</option>
+                <option value="असंक्रामणीय भूमिधर">असंक्रामणीय भूमिधर</option>
+                <option value="आवासीय / आबादी">आवासीय / आबादी</option>
+                <option value="व्यावसायिक (Commercial)">व्यावसायिक (Commercial)</option>
+                <option value="सरकारी / ग्राम सभा">सरकारी / ग्राम सभा</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">बैंक बंधक स्थिति</label>
+              <select class="form-select" id="editInpMortgage">
+                <option value="ऋण मुक्त (Clean / No Mortgage)">ऋण मुक्त (Clean / No Mortgage)</option>
+                <option value="बैंक बंधक (KCC / Agriculture Loan)">बैंक बंधक (KCC / Loan)</option>
+                <option value="विवादित / न्यायालय वाद">विवादित / न्यायालय वाद</option>
+              </select>
+            </div>
+          </div>
 
-    // fine grid
-    ctx.strokeStyle = '#e9e3d3';
-    ctx.lineWidth = 1;
-    for(let gx=0; gx<w; gx+=20){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,h); ctx.stroke(); }
-    for(let gy=0; gy<h; gy+=20){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke(); }
+          <div class="form-group">
+            <label class="form-label">ग्राम / मौजा / तहसील</label>
+            <input type="text" class="form-input" id="editInpVillage" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="ownerEditModal">रद्द करें</button>
+          <button type="submit" class="btn-primary">अपडेट एवं सुरक्षित करें</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    if(points.length === 0){
-      ctx.fillStyle = '#a89f89';
-      ctx.font = '13px "JetBrains Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('Start Walk दबाने पर यहाँ लाइव प्लॉट दिखेगा', w/2, h/2);
-      scaleLabel.textContent = 'scale: —';
-      return;
-    }
+  <!-- CDN Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    // fit bounds with padding
-    const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
-    let minX = Math.min(...xs, 0), maxX = Math.max(...xs, 0);
-    let minY = Math.min(...ys, 0), maxY = Math.max(...ys, 0);
-    const spanX = Math.max(maxX-minX, 5);
-    const spanY = Math.max(maxY-minY, 5);
-    const pad = 40;
-    const scale = Math.min((w-2*pad)/spanX, (h-2*pad)/spanY);
-    const offX = pad - minX*scale + (w-2*pad - spanX*scale)/2;
-    const offY = h - pad + minY*scale - (h-2*pad - spanY*scale)/2;
-
-    function toCanvas(p){
-      return { cx: p.x*scale + offX, cy: offY - p.y*scale };
-    }
-
-    scaleLabel.textContent = 'scale: ' + (1/scale).toFixed(1) + ' m/px';
-
-    // path
-    ctx.beginPath();
-    points.forEach((p,i)=>{
-      const c = toCanvas(p);
-      if(i===0) ctx.moveTo(c.cx, c.cy); else ctx.lineTo(c.cx, c.cy);
-    });
-    if(closed){
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(61,107,76,0.18)';
-      ctx.fill();
-      ctx.strokeStyle = '#3D6B4C';
-    } else {
-      ctx.strokeStyle = '#C08829';
-      ctx.setLineDash([6,4]);
-    }
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // points
-    points.forEach((p,i)=>{
-      const c = toCanvas(p);
-      ctx.beginPath();
-      ctx.arc(c.cx, c.cy, i===0 ? 5 : 3, 0, Math.PI*2);
-      ctx.fillStyle = i===0 ? '#1F2E3D' : '#6B4226';
-      ctx.fill();
-    });
-
-    // live position pulse (last point, if not closed)
-    if(!closed && points.length){
-      const c = toCanvas(points[points.length-1]);
-      ctx.beginPath();
-      ctx.arc(c.cx, c.cy, 8, 0, Math.PI*2);
-      ctx.strokeStyle = '#3D6B4C';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-  }
-
-  function updateStats(){
-    pointVal.textContent = points.length;
-    distVal.textContent = fmt(totalDist) + ' मी';
-
-    if(points.length >= 3){
-      const areaM2 = shoelaceArea(points);
-      areaVal.textContent = fmt(areaM2) + ' वर्ग मीटर';
-      unitTable.style.display = 'block';
-      document.getElementById('uSqm').textContent = fmt(areaM2) + ' m²';
-      document.getElementById('uSqft').textContent = fmt(areaM2*10.7639) + ' ft²';
-      document.getElementById('uAcre').textContent = fmt(areaM2/4046.86, 3) + ' acre';
-      document.getElementById('uHectare').textContent = fmt(areaM2/10000, 3) + ' ha';
-      document.getElementById('uBigha').textContent = fmt(areaM2/2529.285, 2) + ' बीघा';
-    } else {
-      areaVal.textContent = 'कम से कम 3 पॉइंट चाहिए';
-    }
-    draw();
-  }
-
-  function handlePosition(pos){
-    permBanner.style.display = 'none';
-    const { latitude, longitude, accuracy } = pos.coords;
-    accNote.innerHTML = 'GPS शुद्धता: <b>±' + Math.round(accuracy) + ' मी</b>';
-
-    if(accuracy > MAX_ACCURACY_M){
-      statusDot.className = 'dot err';
-      statusText.textContent = 'सिग्नल कमज़ोर (±' + Math.round(accuracy) + ' मी) — खुले में जाएं';
-      return;
-    }
-    statusDot.className = 'dot live';
-    statusText.textContent = 'लाइव ट्रैकिंग जारी है';
-
-    if(!origin){
-      origin = { lat: latitude, lon: longitude };
-      points.push({x:0, y:0});
-      lastRaw = { lat: latitude, lon: longitude };
-      rawCount = 1;
-      updateStats();
-      return;
-    }
-
-    const stepDist = haversine(lastRaw.lat, lastRaw.lon, latitude, longitude);
-    if(stepDist < MIN_STEP_M) return; // ignore jitter
-
-    totalDist += stepDist;
-    const xy = toXY(latitude, longitude);
-    points.push(xy);
-    lastRaw = { lat: latitude, lon: longitude };
-    updateStats();
-  }
-
-  function handleError(err){
-    statusDot.className = 'dot err';
-    statusText.textContent = 'GPS एरर: ' + err.message;
-    permBanner.style.display = 'block';
-    permBanner.textContent = '⚠️ लोकेशन एक्सेस नहीं मिला। ब्राउज़र सेटिंग्स में लोकेशन परमिशन ऑन करें और HTTPS पेज पर खोलें।';
-  }
-
-  startBtn.addEventListener('click', ()=>{
-    if(!navigator.geolocation){
-      statusText.textContent = 'यह डिवाइस/ब्राउज़र GPS सपोर्ट नहीं करता';
-      return;
-    }
-    closed = false;
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    statusText.textContent = 'GPS खोजा जा रहा है...';
-    watchId = navigator.geolocation.watchPosition(handlePosition, handleError, {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 15000
-    });
-  });
-
-  stopBtn.addEventListener('click', ()=>{
-    if(watchId !== null){
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
-    closed = true;
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    statusDot.className = 'dot';
-    statusText.textContent = 'बंद — पॉलीगन क्लोज़ हो गया';
-    updateStats();
-  });
-
-  resetBtn.addEventListener('click', ()=>{
-    if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
-    origin = null; points = []; totalDist = 0; closed = false; lastRaw = null;
-    startBtn.disabled = false; stopBtn.disabled = true;
-    statusDot.className = 'dot'; statusText.textContent = 'तैयार — GPS शुरू नहीं हुआ';
-    areaVal.textContent = '— वर्ग मीटर';
-    unitTable.style.display = 'none';
-    accNote.textContent = '';
-    permBanner.style.display = 'block';
-    permBanner.textContent = '📍 शुरू करने के लिए "Start Walk" दबाएं और लोकेशन की परमिशन दें। सबसे अच्छा नतीजा खुले मैदान में मिलता है, इनडोर नहीं।';
-    updateStats();
-  });
-
-  draw();
-})();
-</script>
+  <!-- Application Main Logic -->
+  <script src="app.js"></script>
 </body>
 </html>
