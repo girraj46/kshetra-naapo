@@ -492,6 +492,37 @@ html, body {
   max-height: 82vh;
 }
 
+.bottom-sheet.collapsed {
+  transform: translateY(calc(100% - 44px));
+}
+
+.sheet-collapse-btn {
+  position: absolute;
+  top: 14px;
+  left: -38px;
+  width: 38px;
+  height: 38px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  box-shadow: -4px 2px 8px rgba(0, 0, 0, 0.15);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 500;
+  transition: all 0.2s ease;
+}
+
+.sheet-collapse-btn:hover {
+  background: var(--bg-panel);
+  color: var(--primary);
+}
+
 .sheet-handle-bar {
   width: 100%;
   padding: 8px 0 4px;
@@ -742,9 +773,11 @@ html, body {
   backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 16px;
+  padding: 16px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -761,13 +794,15 @@ html, body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
+  max-width: 500px;
+  margin: auto;
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transform: scale(0.95);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .modal-backdrop.open .modal-card {
@@ -775,33 +810,63 @@ html, body {
 }
 
 .modal-header {
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  z-index: 10;
 }
 
 .modal-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .modal-body {
-  padding: 16px 18px;
+  padding: 14px 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .modal-footer {
-  padding: 12px 18px;
+  padding: 10px 16px;
   border-top: 1px solid var(--border-color);
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   background: var(--bg-panel);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* Custom Scrollbars */
+.modal-body::-webkit-scrollbar,
+.sheet-scroll-content::-webkit-scrollbar,
+.coords-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track,
+.sheet-scroll-content::-webkit-scrollbar-track,
+.coords-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb,
+.sheet-scroll-content::-webkit-scrollbar-thumb,
+.coords-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
 }
 
 /* Form Styles inside Modals */
@@ -896,10 +961,10 @@ html, body {
 /* Toast Notifications */
 .toast-container {
   position: fixed;
-  top: 70px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3000;
+  z-index: 3500;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1119,6 +1184,15 @@ html, body {
     border-top: none;
     border-left: 1px solid var(--border-color);
     border-radius: 0;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bottom-sheet.collapsed {
+    transform: translateX(100%);
+  }
+
+  .sheet-collapse-btn {
+    display: flex;
   }
   
   .gps-status-pill {

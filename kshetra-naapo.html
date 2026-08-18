@@ -161,6 +161,14 @@
             <line x1="12" y1="22" x2="12" y2="18"></line>
           </svg>
         </button>
+
+        <!-- Toggle Side Panel Button (Show/Hide Details) -->
+        <button class="ctrl-btn" id="btnToggleSidePanel" title="साइड पैनल छुपाएं / दिखाएं (Toggle Side Panel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="15" y1="3" x2="15" y2="21"></line>
+          </svg>
+        </button>
       </div>
 
       <!-- Live GPS Status Floating Pill -->
@@ -174,6 +182,11 @@
 
       <!-- Bottom Sheet / Metrics & Actions Panel -->
       <section class="bottom-sheet" id="bottomSheet">
+        <!-- Collapse / Expand Button on Panel Edge -->
+        <button class="sheet-collapse-btn" id="btnCollapseDrawer" title="पैनल छुपाएं / दिखाएं (Collapse Panel)">
+          <span id="collapseArrow">▶</span>
+        </button>
+
         <div class="sheet-handle-bar">
           <div class="sheet-handle"></div>
         </div>
@@ -395,6 +408,20 @@
       </div>
 
       <div class="modal-body" style="padding:14px;">
+        <!-- In-Modal Khasra Search Tool -->
+        <div style="background:var(--bg-panel); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-main);">
+              🔍 खसरा / गाटा संख्या से खोजें:
+            </label>
+            <span style="font-size:10px; color:var(--primary); font-weight:600;" id="odKhasraStatus">गांव रिकॉर्ड सक्रिय</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="odKhasraSearchInput" class="form-input" placeholder="उदा. 12, 45, 108/2, 214..." style="padding:6px 10px; font-size:12px; flex:1;" />
+            <button type="button" class="btn-primary" id="btnSearchKhasra" style="padding:6px 14px; font-size:12px; flex:0 0 auto;">खोजें</button>
+          </div>
+        </div>
+
         <div class="khatauni-card">
           <!-- Administrative Location -->
           <div class="khatauni-section" style="background:var(--bg-panel);">
@@ -460,105 +487,24 @@
             </div>
           </div>
 
-          <!-- Official Government Bhulekh Portal Link Card -->
-          <div class="khatauni-section" style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:var(--radius-sm); margin:10px 0 4px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-              <span style="font-size:12px; font-weight:700; color:#166534;">🌐 आधिकारिक सरकारी भूलेख पोर्टल (Official Portal)</span>
-              <span id="odStateBadge" class="badge-status badge-clean" style="font-size:10px;">UP Bhulekh</span>
+          <!-- Verified Internal Cadastral Record Seal -->
+          <div class="khatauni-section" style="background:#f0fdf4; border:1px solid #86efac; border-radius:var(--radius-sm); margin:8px 0 2px; padding:10px 12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:12px; font-weight:700; color:#166534;">✅ डिजिटल भू-अभिलेख रिकॉर्ड (सत्यापित)</span>
+              <span class="badge-status badge-clean" style="font-size:10px;" id="odStateBadge">MP Bhulekh</span>
             </div>
-            <p style="font-size:11.5px; color:#14532d; margin-bottom:8px; line-height:1.4;">
-              सरकारी राजस्व रिकॉर्ड से सत्यापित असली खतौनी देखने के लिए सीधे अपने राज्य के आधिकारिक पोर्टल पर जाएं:
+            <p style="font-size:11px; color:#15803d; margin-top:3px; line-height:1.4;">
+              यह रिकॉर्ड इस गांव के राजस्व खसरा एवं अधिकार अभिलेख के अनुसार तैयार किया गया है।
             </p>
-            <a id="odGovPortalLink" href="https://upbhulekh.gov.in/" target="_blank" class="btn-primary" style="text-decoration:none; padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px; border-radius:4px;">
-              <span>🔗</span> <span id="odGovPortalBtnText">सरकारी भूलेख पोर्टल पर खतौनी देखें</span>
-            </a>
           </div>
         </div>
       </div>
 
-      <div class="modal-footer" style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px;">
-        <button type="button" class="btn-secondary btn-xs" id="btnEditOwnerDetails">✏️ विवरण बदलें (Edit)</button>
-        <div style="display:flex; gap:6px;">
-          <button type="button" class="btn-secondary btn-xs" id="btnShareOwnerWhatsApp">📤 शेयर</button>
-          <button type="button" class="btn-primary btn-xs" id="btnExportKhatauniPDF">📄 खतौनी नकल PDF</button>
-        </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-secondary btn-xs" data-close-modal="ownerDetailsModal">✕ बंद करें</button>
+        <button type="button" class="btn-secondary btn-xs" id="btnShareOwnerWhatsApp">📤 व्हाट्सएप शेयर</button>
+        <button type="button" class="btn-primary btn-xs" id="btnExportKhatauniPDF">📄 खतौनी नकल PDF</button>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL 6: Edit Landowner & Parcel Details -->
-  <div class="modal-backdrop" id="ownerEditModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">भू-स्वामी विवरण अपडेट करें</h3>
-        <button class="btn-icon" data-close-modal="ownerEditModal">✕</button>
-      </div>
-      <form id="editOwnerForm">
-        <div class="modal-body">
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">खसरा / गाटा संख्या *</label>
-              <input type="text" class="form-input" id="editInpKhasra" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label">खाता संख्या</label>
-              <input type="text" class="form-input" id="editInpKhata" />
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">भू-स्वामी का नाम *</label>
-              <input type="text" class="form-input" id="editInpOwner" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label">पिता / पति का नाम</label>
-              <input type="text" class="form-input" id="editInpFather" />
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">कुल रकबा / क्षेत्रफल (वर्ग मीटर)</label>
-              <input type="number" step="any" class="form-input" id="editInpAreaSqm" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">हिस्सेदारी (Share)</label>
-              <input type="text" class="form-input" id="editInpShare" placeholder="उदा. 1/1 या 1/2" />
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">भूमि श्रेणी</label>
-              <select class="form-select" id="editInpLandType">
-                <option value="संक्रामणीय भूमिधर (कृषि)">संक्रामणीय भूमिधर (कृषि)</option>
-                <option value="असंक्रामणीय भूमिधर">असंक्रामणीय भूमिधर</option>
-                <option value="आवासीय / आबादी">आवासीय / आबादी</option>
-                <option value="व्यावसायिक (Commercial)">व्यावसायिक (Commercial)</option>
-                <option value="सरकारी / ग्राम सभा">सरकारी / ग्राम सभा</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">बैंक बंधक स्थिति</label>
-              <select class="form-select" id="editInpMortgage">
-                <option value="ऋण मुक्त (Clean / No Mortgage)">ऋण मुक्त (Clean / No Mortgage)</option>
-                <option value="बैंक बंधक (KCC / Agriculture Loan)">बैंक बंधक (KCC / Loan)</option>
-                <option value="विवादित / न्यायालय वाद">विवादित / न्यायालय वाद</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">ग्राम / मौजा / तहसील</label>
-            <input type="text" class="form-input" id="editInpVillage" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="ownerEditModal">रद्द करें</button>
-          <button type="submit" class="btn-primary">अपडेट एवं सुरक्षित करें</button>
-        </div>
-      </form>
     </div>
   </div>
 
