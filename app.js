@@ -249,11 +249,11 @@
 
     L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
-    // Tile providers
+    // Tile providers (Ultra-High Resolution Indian Satellite & Hybrid Coverage)
     tileLayers = {
-      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        subdomains: ['server', 'services']
+      satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
       }),
       street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19
