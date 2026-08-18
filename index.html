@@ -1,17 +1,519 @@
 <!DOCTYPE html>
 <html lang="hi" data-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>क्षेत्रफल नापो — डिजिटल भू-अभिलेख एवं सर्वेक्षण प्रणाली</title>
-    <meta name="description" content="व्यावसायिक भूमि सर्वेक्षण, भू-अभिलेख एवं खतौनी प्रणाली" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2315803d'><path d='M3 3h18v18H3z'/></svg>" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="./assets/index-B4cn-cBn.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BzDaKNDL.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>क्षेत्रफल नापो — डिजिटल भू-अभिलेख एवं सर्वेक्षण प्रणाली</title>
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#15803d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="क्षेत्रफल नापो" />
+  <meta name="description" content="सटीक जीपीएस एवं डिजिटल सैटेलाइट मानचित्र आधारित भूमि क्षेत्रफल मापन प्रणाली (बीघा, बिस्वा, एकड़, हेक्टेयर, गुंठा, कनाल, मरला)" />
+
+  <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header / Navigation Bar -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="app-logo">📐</div>
+        <div class="brand-info">
+          <span class="brand-title" data-i18n="appName">क्षेत्रफल नापो</span>
+          <span class="brand-badge" data-i18n="tagline">डिजिटल भू-अभिलेख प्रणाली</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Project Selector -->
+        <button class="project-selector-btn" id="btnProjectOpen" title="Select Project / Client">
+          <span>📁</span>
+          <span id="currentProjectName">Default Project</span>
+        </button>
+
+        <!-- History Button -->
+        <button class="btn-icon" id="btnHistoryOpen" title="Measurement History">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </button>
+
+        <!-- Cloud / Backup -->
+        <button class="btn-icon" id="btnBackupOpen" title="Backup & Cloud Sync">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+          </svg>
+        </button>
+
+        <!-- Language Toggle -->
+        <button class="btn-icon" id="btnLangToggle" title="Switch Language (हिन्दी / English)" style="font-weight:700; font-size:11px;">
+          EN
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="btn-icon" id="btnThemeToggle" title="Toggle Light/Dark Theme">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Map Workspace -->
+    <main class="map-workspace">
+      <!-- Search Bar -->
+      <div class="map-search-container">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="locationSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="स्थान, गांव, शहर या Lat, Lng खोजें..." autocomplete="off" />
+        </div>
+        <div class="search-results-dropdown" id="searchResultsDropdown"></div>
+      </div>
+
+      <!-- Floating Left Toolbar -->
+      <div class="map-controls-left">
+        <!-- GPS Walk Tracker -->
+        <button class="ctrl-btn" id="btnGPSWalk" title="Start/Stop GPS Live Walk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+        </button>
+
+        <!-- Manual Draw Mode -->
+        <button class="ctrl-btn" id="btnManualDraw" title="Manual Draw / Tap Map to Add Point">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+            <path d="M2 2l7.586 7.586"></path>
+            <circle cx="11" cy="11" r="2"></circle>
+          </svg>
+        </button>
+
+        <!-- Landowner & Cadastral Inspector Tool -->
+        <button class="ctrl-btn" id="btnOwnerInspect" title="भू-स्वामी व खतौनी विवरण देखें (Click point to view Landowner details)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+
+        <!-- Undo Point -->
+        <button class="ctrl-btn" id="btnUndo" title="Undo Last Point" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+
+        <!-- Redo Point -->
+        <button class="ctrl-btn" id="btnRedo" title="Redo Point" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+
+        <!-- Clear Map -->
+        <button class="ctrl-btn" id="btnClearMap" title="Clear All Points">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Floating Right Toolbar -->
+      <div class="map-controls-right">
+        <!-- Layer Switcher Button -->
+        <button class="ctrl-btn" id="btnLayerToggle" title="Map Layers (Satellite, Street, Topo)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </button>
+
+        <!-- Layer Dropdown Menu -->
+        <div class="layer-menu" id="layerMenu">
+          <button class="layer-opt active" data-layer="satellite">🛰️ Satellite (उपग्रह)</button>
+          <button class="layer-opt" data-layer="street">🗺️ Street (मानचित्र)</button>
+          <button class="layer-opt" data-layer="topo">⛰️ Topo (भौगोलिक)</button>
+        </div>
+
+        <!-- Recenter / Locate Button -->
+        <button class="ctrl-btn" id="btnRecenter" title="Fit Polygon or Center on My Location">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="12" x2="2" y2="12"></line>
+            <line x1="12" y1="6" x2="12" y2="2"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+          </svg>
+        </button>
+
+        <!-- Toggle Side Panel Button (Show/Hide Details) -->
+        <button class="ctrl-btn" id="btnToggleSidePanel" title="साइड पैनल छुपाएं / दिखाएं (Toggle Side Panel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="15" y1="3" x2="15" y2="21"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Live GPS Status Floating Pill -->
+      <div class="gps-status-pill" id="gpsStatusPill">
+        <span class="pulse-dot" id="gpsPulseDot"></span>
+        <span id="gpsStatusText" data-i18n="noSignal">GPS बंद</span>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Bottom Sheet / Metrics & Actions Panel -->
+      <section class="bottom-sheet" id="bottomSheet">
+        <!-- Collapse / Expand Button on Panel Edge -->
+        <button class="sheet-collapse-btn" id="btnCollapseDrawer" title="पैनल छुपाएं / दिखाएं (Collapse Panel)">
+          <span id="collapseArrow">▶</span>
+        </button>
+
+        <div class="sheet-handle-bar">
+          <div class="sheet-handle"></div>
+        </div>
+
+        <!-- Summary Stats Bar -->
+        <div class="summary-bar">
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="area">क्षेत्रफल (Area)</span>
+            <span class="stat-value" id="mainAreaVal">—</span>
+            <span class="stat-sub" id="mainAreaUnit">Min 3 points</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="perimeter">परिमाप</span>
+            <span class="stat-value" id="mainPerimeterVal">0 m</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label" data-i18n="points">पॉइंट्स</span>
+            <span class="stat-value" id="pointsCountVal">0</span>
+          </div>
+        </div>
+
+        <!-- Primary Action Buttons Bar -->
+        <div class="primary-actions-bar">
+          <button class="btn-primary" id="btnSaveOpen">
+            <span>💾</span>
+            <span data-i18n="save">सुरक्षित करें</span>
+          </button>
+          <button class="btn-secondary" id="btnPDFExport" title="Generate Professional PDF Certificate">
+            <span>📄</span>
+            <span data-i18n="pdfReport">PDF</span>
+          </button>
+          <button class="btn-secondary" id="btnImageExport" title="Download Map PNG Image">
+            <span>📸</span>
+            <span data-i18n="exportImg">इमेज</span>
+          </button>
+          <button class="btn-secondary" id="btnShareWhatsApp" title="Share Summary to WhatsApp">
+            <span>📤</span>
+            <span data-i18n="share">शेयर</span>
+          </button>
+        </div>
+
+        <!-- Scrollable Units & Details Content -->
+        <div class="sheet-scroll-content">
+          <!-- State / Region Preset Selector -->
+          <div class="state-selector-wrapper">
+            <span class="state-selector-label" data-i18n="statePreset">राज्य / मानक:</span>
+            <select id="statePresetSelect" class="state-select"></select>
+          </div>
+
+          <!-- Indian Land Measurement Units Grid -->
+          <div class="units-grid" id="unitsGrid"></div>
+
+          <!-- Coordinates Accordion -->
+          <div class="coords-accordion">
+            <div class="accordion-header" id="coordsAccordionHeader">
+              <span>📍 <span data-i18n="points">पॉइंट्स</span> एवं निर्देशांक (GPS Coordinates)</span>
+              <span id="coordsArrow">▼</span>
+            </div>
+            <div class="coords-table-wrapper" id="coordsTableWrapper">
+              <table class="coords-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>दूरी (Side)</th>
+                  </tr>
+                </thead>
+                <tbody id="coordsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- MODAL 1: Save Survey Record -->
+  <div class="modal-backdrop" id="saveModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="saveModalTitle">सर्वेक्षण सुरक्षित करें</h3>
+        <button class="btn-icon" data-close-modal="saveModal">✕</button>
+      </div>
+      <form id="saveSurveyForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" data-i18n="surveyName">सर्वेक्षण का नाम *</label>
+            <input type="text" class="form-input" id="inpSurveyTitle" required placeholder="उदा. रामकिशन की कृषि भूमि" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">प्रोजेक्ट / फोल्डर</label>
+            <select class="form-select" id="saveSurveyProjectSelect"></select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" data-i18n="khasraNo">खसरा / गाटा संख्या</label>
+              <input type="text" class="form-input" id="inpKhasraNo" placeholder="उदा. 423/1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="khataNo">खाता संख्या</label>
+              <input type="text" class="form-input" id="inpKhataNo" placeholder="उदा. 88" />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" data-i18n="ownerName">भू-स्वामी का नाम</label>
+              <input type="text" class="form-input" id="inpOwnerName" placeholder="उदा. रामकिशन यादव" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="surveyorName">सर्वेक्षक / पटवारी नाम</label>
+              <input type="text" class="form-input" id="inpSurveyorName" placeholder="उदा. आर. के. शर्मा" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="village">ग्राम / तहसील / जिला</label>
+            <input type="text" class="form-input" id="inpVillage" placeholder="उदा. मौजा रामपुर, तहसील सदर" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="notes">विवरण / टिप्पणी</label>
+            <textarea class="form-textarea" id="inpNotes" rows="2" placeholder="सीमा पत्थर, रास्ते या पेड़ आदि के निशान..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="saveModal" data-i18n="cancel">रद्द करें</button>
+          <button type="submit" class="btn-primary" data-i18n="confirmSave">सुरक्षित करें</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: History & Saved Surveys -->
+  <div class="modal-backdrop" id="historyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="historyModalTitle">सर्वेक्षण इतिहास एवं रिकॉर्ड्स</h3>
+        <button class="btn-icon" data-close-modal="historyModal">✕</button>
+      </div>
+      <div class="modal-body" id="historyListContainer"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="historyModal" data-i18n="cancel">बंद करें</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Projects & Folders Management -->
+  <div class="modal-backdrop" id="projectModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="projectModalTitle">प्रोजेक्ट एवं फोल्डर प्रबंधन</h3>
+        <button class="btn-icon" data-close-modal="projectModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="createProjectForm" style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" class="form-input" id="inpNewProjectName" required data-i18n-placeholder="newProjectName" placeholder="नए प्रोजेक्ट का नाम (उदा. रामपुर चकबंदी)" style="flex:1;" />
+          <button type="submit" class="btn-primary" data-i18n="createProject">बनाएं</button>
+        </form>
+        <p style="font-size:12px; color:var(--text-muted);">अपने सभी सर्वेक्षणों को प्रोजेक्ट या मौजा अनुसार व्यवस्थित करें।</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="projectModal" data-i18n="cancel">बंद करें</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Cloud Sync & Backup / Restore -->
+  <div class="modal-backdrop" id="backupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="backupTitle">डेटा बैकअप एवं रीस्टोर</h3>
+        <button class="btn-icon" data-close-modal="backupModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="background:var(--bg-panel); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">📥 ऑफ़लाइन / क्लाउड बैकअप डाउनलोड</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">अपने सभी प्रोजेक्ट्स, खसरा रिकॉर्ड्स और मापों को एक सुरक्षित JSON बैकअप फ़ाइल में डाउनलोड करें।</p>
+            <button class="btn-primary" id="btnExportBackup" data-i18n="exportBackup" style="width:100%;">
+              बैकअप फ़ाइल डाउनलोड करें (JSON)
+            </button>
+          </div>
+
+          <div style="background:var(--bg-panel); padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">📤 बैकअप फ़ाइल रीस्टोर करें</h4>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">पहले से सेव की गई JSON बैकअप फ़ाइल से अपने सभी पुराने सर्वे रिकॉर्ड्स को वापस लाएं।</p>
+            <input type="file" id="backupFileInput" accept=".json" style="display:none;" />
+            <button class="btn-secondary" onclick="document.getElementById('backupFileInput').click()" style="width:100%;">
+              फ़ाइल चुनें एवं रीस्टोर करें
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-close-modal="backupModal" data-i18n="cancel">बंद करें</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: Landowner Dossier & Khatauni Details -->
+  <div class="modal-backdrop" id="ownerDetailsModal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header" style="background:#15803d; color:white;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">🏛️</span>
+          <div>
+            <h3 class="modal-title" style="color:white; font-size:15px;" id="ownerModalTitle">भू-अभिलेख एवं खतौनी विवरण</h3>
+            <span style="font-size:10.5px; opacity:0.9; font-family:var(--font-mono);" id="ownerModalSubtitle">डिजिटल राजस्व अधिकार अभिलेख</span>
+          </div>
+        </div>
+        <button class="btn-icon" data-close-modal="ownerDetailsModal" style="background:rgba(255,255,255,0.2); color:white; border:none;">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding:14px;">
+        <!-- In-Modal Khasra Search Tool -->
+        <div style="background:var(--bg-panel); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-main);">
+              🔍 खसरा / गाटा संख्या से खोजें:
+            </label>
+            <span style="font-size:10px; color:var(--primary); font-weight:600;" id="odKhasraStatus">गांव रिकॉर्ड सक्रिय</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="odKhasraSearchInput" class="form-input" placeholder="उदा. 12, 45, 108/2, 214..." style="padding:6px 10px; font-size:12px; flex:1;" />
+            <button type="button" class="btn-primary" id="btnSearchKhasra" style="padding:6px 14px; font-size:12px; flex:0 0 auto;">खोजें</button>
+          </div>
+        </div>
+
+        <div class="khatauni-card">
+          <!-- Administrative Location -->
+          <div class="khatauni-section" style="background:var(--bg-panel);">
+            <div class="khatauni-row">
+              <span class="khatauni-label">ग्राम / मौजा:</span>
+              <span class="khatauni-val" id="odVillage">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">तहसील व जनपद:</span>
+              <span class="khatauni-val" id="odTehsilDistrict">—</span>
+            </div>
+          </div>
+
+          <!-- Parcel & Owner Info -->
+          <div class="khatauni-section">
+            <div class="khatauni-row">
+              <span class="khatauni-label">खसरा / गाटा संख्या:</span>
+              <span class="khatauni-val" style="color:#15803d; font-size:14px;" id="odKhasra">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">खाता संख्या:</span>
+              <span class="khatauni-val" id="odKhata">—</span>
+            </div>
+            <div class="khatauni-row" style="margin-top:4px;">
+              <span class="khatauni-label">भू-स्वामी (खातेदार):</span>
+              <span class="khatauni-val" style="font-size:13.5px; color:#0f172a;" id="odOwnerName">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">पिता / पति का नाम:</span>
+              <span class="khatauni-val" id="odFatherName">—</span>
+            </div>
+          </div>
+
+          <!-- Land Area & Classification -->
+          <div class="khatauni-section">
+            <div class="khatauni-row">
+              <span class="khatauni-label">कुल क्षेत्रफल:</span>
+              <span class="khatauni-val" style="color:#b45309; font-size:14px;" id="odArea">—</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">इकाइयों में विस्तार:</span>
+              <span class="khatauni-val" style="font-size:11px; font-family:var(--font-mono);" id="odAreaUnits">—</span>
+            </div>
+            <div class="khatauni-row" style="margin-top:4px;">
+              <span class="khatauni-label">भूमि श्रेणी (Land Type):</span>
+              <span class="khatauni-val"><span class="badge-status badge-land-type" id="odLandType">संक्रामणीय भूमिधर (कृषि)</span></span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">हिस्सेदारी (Share):</span>
+              <span class="khatauni-val" id="odShare">1/1 (पूर्ण स्वामी)</span>
+            </div>
+            <div class="khatauni-row">
+              <span class="khatauni-label">बैंक बंधक / ऋण स्थिति:</span>
+              <span class="khatauni-val"><span class="badge-status badge-clean" id="odMortgage">ऋण मुक्त (Clean)</span></span>
+            </div>
+          </div>
+
+          <!-- GPS Coordinates -->
+          <div class="khatauni-section" style="background:var(--bg-panel); font-size:11px; font-family:var(--font-mono);">
+            <div class="khatauni-row">
+              <span class="khatauni-label">सटीक GPS निर्देशांक:</span>
+              <span class="khatauni-val" id="odCoordinates">—</span>
+            </div>
+          </div>
+
+          <!-- Verified Internal Cadastral Record Seal -->
+          <div class="khatauni-section" style="background:#f0fdf4; border:1px solid #86efac; border-radius:var(--radius-sm); margin:8px 0 2px; padding:10px 12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:12px; font-weight:700; color:#166534;">✅ डिजिटल भू-अभिलेख रिकॉर्ड (सत्यापित)</span>
+              <span class="badge-status badge-clean" style="font-size:10px;" id="odStateBadge">MP Bhulekh</span>
+            </div>
+            <p style="font-size:11px; color:#15803d; margin-top:3px; line-height:1.4;">
+              यह रिकॉर्ड इस गांव के राजस्व खसरा एवं अधिकार अभिलेख के अनुसार तैयार किया गया है।
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn-secondary btn-xs" data-close-modal="ownerDetailsModal">✕ बंद करें</button>
+        <button type="button" class="btn-secondary btn-xs" id="btnShareOwnerWhatsApp">📤 व्हाट्सएप शेयर</button>
+        <button type="button" class="btn-primary btn-xs" id="btnExportKhatauniPDF">📄 खतौनी नकल PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Application Main Logic -->
+  <script src="app.js"></script>
+</body>
 </html>
